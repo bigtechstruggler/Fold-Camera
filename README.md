@@ -43,6 +43,10 @@ python3 tools/check-source-hygiene.py
 
 Camera behavior should be validated on target hardware.
 
+## Authorship and credits
+
+Fold Camera's fork-specific development is maintained by [@bigtechstruggler](https://github.com/bigtechstruggler). See [AUTHORS.md](AUTHORS.md) for attribution and a request to preserve the identity of Fold Camera engines and modules when reusing them.
+
 ## Licensing
 
 GrapheneOS Camera's MIT license is retained in [LICENSE](LICENSE). Third-party model and library information is documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Copyright headers and third-party attributions must be preserved when redistributing the source.
