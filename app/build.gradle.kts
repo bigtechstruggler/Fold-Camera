@@ -104,7 +104,7 @@ dependencies {
     implementation(libs.zxing.core)
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.23.2")
     // Official OpenCV Android AAR: native SIFT, matching and image processing.
-    implementation("org.opencv:opencv:4.13.0")
+    implementation("org.opencv:opencv:5.0.0.1")
 
 }
 
