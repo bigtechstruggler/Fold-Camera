@@ -1,39 +1,48 @@
 # Fold Camera
 
-> **Source publication status:** Repository setup is complete. The full v143.3.3 source tree, including the bundled portrait models, is pending its initial Git push. Please do not treat this documentation-only state as a buildable checkout.
-
-Fold Camera is an independent Android camera application based on [GrapheneOS Camera](https://github.com/GrapheneOS/Camera). **It is not an official GrapheneOS project and is not endorsed by GrapheneOS.**
+Fold Camera is an Android camera application based on [GrapheneOS Camera](https://github.com/GrapheneOS/Camera). It is an independent derivative and is not an official GrapheneOS project.
 
 ## Features
 
-- Photography, video recording, QR scanning, front and rear cameras
-- Portrait mode with locally bundled depth and segmentation models
-- Horizontal **180° and 360° panoramas**
-- **Dual Photo and Dual Video** with picture-in-picture and split-screen layouts
+- Photo, video, QR scanning, front and rear cameras
+- Portrait with locally bundled segmentation and depth models
+- Horizontal 180° and 360° panoramas
+- Concurrent Dual Photo and Dual Video with picture-in-picture and split-screen layouts
 - Manual camera controls, burst, slow motion, hyperlapse and interval capture
-- Customizable camera mode strip and foldable-device support
+- Customizable camera mode strip and foldable-device camera support
 
-Dual Photo combines the preview streams into a JPEG; its maximum resolution is limited by preview resolution. Photos are stored in `DCIM/Dual Photo`, and dual recordings in `DCIM/Dual Video`. Dual Photo also offers torch and screen-based illumination where supported.
+Dual Photo creates a JPEG from the combined camera preview and stores it in `DCIM/Dual Photo`. Dual Video recordings go into `DCIM/Dual Video`. Taking a photo while recording uses the Dual Photo directory. JPEG resolution is limited by the preview stream.
 
-Some dual-camera functionality uses a CameraX prerelease and may depend on device capabilities.
+Dual Photo offers Flash Off/On/Auto, a torch toggle and optional front-camera Self Illumination in the existing camera settings. Because concurrent capture uses composed preview frames rather than ImageCapture, flash is approximated by briefly enabling the rear camera torch before the snapshot. Auto uses an approximate preview brightness measurement. Torch operation depends on device and CameraX support. Self Illumination temporarily raises screen brightness during the capture; the two lighting settings are independent.
 
-## Building from source
+Dual Photo shutter and Dual Video recording sounds use the existing GrapheneOS Camera audio player and honor the camera sounds preference. Recording audio is controlled separately by the microphone setting.
 
-After the complete source is committed, install **JDK 21** and the Android SDK, then run:
+Dynamic dual-camera composition currently uses a CameraX prerelease; verify device compatibility before shipping.
+
+## Build
+
+Requires JDK 21, an Android SDK and the Gradle wrapper included in the repository. Point `ANDROID_HOME` to your SDK, or place the SDK at `~/Android/Sdk`.
 
 ```sh
 printf 'sdk.dir=%s\n' "${ANDROID_HOME:-$HOME/Android/Sdk}" > local.properties
 ./gradlew :app:assembleDebug --no-daemon
 ```
 
-For local release builds on Arch Linux, see `BUILD_ARCH.sh`. Signing keys are **not** part of the repository.
+For an aligned and signed release APK on Arch Linux, use `./BUILD_ARCH.sh`. This uses the locally held signing key and performs Gradle dependency verification. The script never disables verification or creates a signing key.
 
-Run `python3 tools/check-source-hygiene.py` and `./gradlew :app:lintRelease --no-daemon --console=plain` to verify the source. Test camera behavior on target hardware.
+Dependency hashes for CameraX and OpenCV must be reviewed. When the bundled verification file does not cover the current dependencies, the build script imports metadata from an explicitly trusted local build, or exits with instructions.
 
-## APK releases
+## Verification
 
-Source releases and installable APKs are different artifacts. A signed APK may be attached separately under [Releases](../../releases) later.
+Check the Android release build and lint on a configured development machine:
 
-## Upstream and licenses
+```sh
+python3 tools/check-source-hygiene.py
+./gradlew :app:lintRelease --no-daemon --console=plain
+```
 
-This is a third-party derivative of GrapheneOS Camera. Retain the original [MIT license](LICENSE), source copyright notices and all notices for third-party components and bundled ONNX models. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.
+Camera behavior should be validated on target hardware.
+
+## Licensing
+
+GrapheneOS Camera's MIT license is retained in [LICENSE](LICENSE). Third-party model and library information is documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Copyright headers and third-party attributions must be preserved when redistributing the source.
