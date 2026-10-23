@@ -1,0 +1,45 @@
+# Android and Gradle build outputs
+.gradle/
+.kotlin/
+**/build/
+*.apk
+*.aab
+*.aar
+*.ap_
+*.dex
+*.class
+
+# Local IDE and SDK settings
+.idea/
+*.iml
+local.properties
+keystore.properties
+*.jks
+*.keystore
+.cxx/
+.externalNativeBuild/
+captures/
+
+# Local logs, scratch files and backups
+*.log
+*.bak
+*.backup
+*.orig
+*.rej
+*~
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local credentials and generated service configuration
+google-services.json
+
+# Release signing materials
+*.p12
+*.pfx
+*.pem
+*.key
+*.asc
+*.env
+.env.*
+!*.env.example
