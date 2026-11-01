@@ -2352,15 +2352,22 @@ class CamConfig(private val mActivity: MainActivity) {
             tab.text = modeTabLabel(mode)
             tab.tag = mode
             if (editing) tab.customView = editorView(mode)
-            tab.view.setOnTouchListener { _, event ->
-                if (event.actionMasked == MotionEvent.ACTION_UP && !tabLayout.isEditingModes) {
-                    when (mode) {
-                        ModeTabAction.MORE -> showHiddenModes()
-                        is CameraMode, is FoldTabMode -> mActivity.finalizeMode(tab)
-                        is CameraShortcutMode -> mActivity.openCameraShortcut(mode)
-                    }
+            // Shared activation path for touch, TalkBack and keyboard/DPAD.
+            // Android's click after a finger-up must not activate a mode twice.
+            fun activateTab() {
+                if (tabLayout.isEditingModes) return
+                when (mode) {
+                    ModeTabAction.MORE -> showHiddenModes()
+                    is CameraMode, is FoldTabMode -> mActivity.finalizeMode(tab)
+                    is CameraShortcutMode -> mActivity.openCameraShortcut(mode)
                 }
+            }
+            tab.view.setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_UP) activateTab()
                 false
+            }
+            tab.view.setOnClickListener { view ->
+                if (!view.isPressed) activateTab()
             }
             // Selecting the CAMERA/PANORAMA backing mode as well as its active
             // shortcut made the strip jump to a seemingly random nearby tab.
