@@ -209,15 +209,19 @@ open class MainActivity : AppCompatActivity(),
             tabLayout.post {
                 if (!isFinishing && !isDestroyed) camConfig.refreshFoldModeTabs()
             }
-        } else if (selectionChanged && tabLayout.tabCount > 0) {
-            // Fold capability callbacks can arrive AFTER we enter a concurrent Dual
-            // session. Never let an asynchronous fold-state change move its tab
-            // back to CAMERA (or another unrelated position).
-            val target = tabLayout.getTabForTag(activeModeTabTag())
-                ?: tabLayout.getTabForAction(ModeTabAction.MORE)
-            target?.let { tabLayout.goToTab(it) }
+        } else if (tabLayout.tabCount > 0) {
+            // Cancelled or rejected WindowArea requests must not leave a stale
+            // fold mode highlighted, including null -> null after a failed start.
+            val staleFoldSelection = newSelection == null &&
+                tabLayout.selectedTab?.tag is FoldTabMode
+            if (selectionChanged || staleFoldSelection) {
+                val target = tabLayout.getTabForTag(activeModeTabTag())
+                    ?: tabLayout.getTabForAction(ModeTabAction.MORE)
+                target?.let { tabLayout.goToTab(it) }
+            }
         }
     }
+    internal fun foldPreviewRecoveryCount(): Int = rearSelfieController?.foldPreviewRecoveryCount ?: 0
     internal fun foldSecondaryPreviewView(): PreviewView? = rearSelfieController?.secondaryPreviewView
     internal fun onFoldSecondaryPreviewBindFailure() { rearSelfieController?.onPreviewBindFailed() }
     internal fun closeFoldDualForModeChange() { rearSelfieController?.stopDualForModeChange() }
@@ -240,12 +244,9 @@ open class MainActivity : AppCompatActivity(),
             (::panoramaCapturer.isInitialized && panoramaCapturer.isCaptureInProgress)) {
             showMessage(R.string.dual_busy); return
         }
-        // Do not keep the Fold rear-display controller alive alongside concurrent cameras.
-        when (foldSelectedMode) {
-            FoldTabMode.DUAL -> rearSelfieController?.toggleDualPreview()
-            FoldTabMode.REAR -> rearSelfieController?.toggleRearSelfie()
-            null -> Unit
-        }
+        // Cancel even pending WindowArea callbacks, not only a live session.
+        // Integrated Dual will bind its own camera pipeline next.
+        rearSelfieController?.cancelForModeChange()
         if (camConfig.currentMode != CameraMode.CAMERA) camConfig.switchMode(CameraMode.CAMERA)
         if (integratedDual == null) integratedDual = IntegratedDualController(this)
         integratedDual?.enter(mode)
@@ -1608,12 +1609,13 @@ open class MainActivity : AppCompatActivity(),
                 // Refresh the label after the current tab gesture settles.
                 tabLayout.post { if (!tabLayout.isEditingModes) camConfig.refreshFoldModeTabs() }
             }
-            // Exiting a fold tab via a standard mode must end the active fold session.
-            when (foldSelectedMode) {
-                FoldTabMode.DUAL -> if (mode == CameraMode.CAMERA) rearSelfieController?.toggleDualPreview()
-                FoldTabMode.REAR -> rearSelfieController?.toggleRearSelfie()
-                null -> Unit
-            }
+            // A Camera -> Camera tap does not call CamConfig.switchMode().
+            // Invalidate queued transfers and restore the single live preview
+            // after Dual teardown, rather than toggling a potentially pending mode.
+            rearSelfieController?.cancelForModeChange(
+                restoreCameraPreview = mode == CameraMode.CAMERA &&
+                    mode == camConfig.currentMode
+            )
 
             // Blur the previous preview during the camera rebind.
             if (mode != camConfig.currentMode) {
