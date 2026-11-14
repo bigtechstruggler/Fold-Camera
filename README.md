@@ -1,3 +1,5 @@
+i'm gonna work on it again right now im working on a custom ai model.
+
 # Fold Camera
 
 Fold Camera is an Android camera application based on [GrapheneOS Camera](https://github.com/GrapheneOS/Camera). It is an independent derivative and is not an official GrapheneOS project.
